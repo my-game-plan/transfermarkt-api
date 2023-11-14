@@ -1,13 +1,19 @@
-FROM python:3.9-slim-bullseye
+FROM public.ecr.aws/sam/build-python3.11
 
-ENV PYTHONUNBUFFERED=1
-ENV PYTHONPATH "${PYTHONPATH}:/app"
+# Install libxml2 and libxslt development packages
+RUN yum install -y libxml2-devel libxslt-devel
 
-WORKDIR /app
-COPY requirements.txt ./
+# Set the work directory
+WORKDIR /var/task
 
-RUN pip install --no-cache-dir -r requirements.txt
+# Copy only the required application files and requirements
+COPY requirements.txt .
 
-COPY . ./
+# Install the Python packages into the python/ directory
+RUN pip install -r requirements.txt -t python/
 
-CMD ["python", "app/main.py"]
+# Copy the application directory
+COPY app/ app/
+
+# Package everything into a zip file
+RUN zip -r lambda-deployment-package.zip python/ app/

@@ -58,8 +58,8 @@ ignore-init-module = true
 ignore-module = true
 fail-under = 100
 
-[tool.poetry.packages]
-include = ["app"]
+[[tool.poetry.packages]]
+include = "app"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

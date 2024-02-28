@@ -2,7 +2,8 @@ from dataclasses import dataclass, field
 from typing import Optional
 from xml.etree import ElementTree
 
-import requests
+from requests import ConnectionError, Session
+from requests.adapters import HTTPAdapter, Retry
 from bs4 import BeautifulSoup
 from fastapi import HTTPException
 from lxml import etree
@@ -27,6 +28,30 @@ class TransfermarktBase:
     URL: str
     page: ElementTree = field(default_factory=lambda: None, init=False)
     response: dict = field(default_factory=lambda: {}, init=False)
+    _session: Session = field(default=None, init=False)
+
+    def __post_init__(self):
+        self.ensure_session()
+
+    def ensure_session(self):
+        if self._session is None:
+            self._session = self._create_session()
+
+    @classmethod
+    def _create_session(cls) -> Session:
+        status_forcelist = [500, 502, 503, 504]
+        retries = Retry(total=5, backoff_factor=1, status_forcelist=status_forcelist)
+        session = Session()
+        session.mount('https://', HTTPAdapter(max_retries=retries))
+        session.headers.update({
+            "User-Agent": (
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/113.0.0.0 "
+                "Safari/537.36"
+            ),
+        })
+        return session
 
     def make_request(self, url: Optional[str] = None) -> Response:
         """
@@ -43,18 +68,12 @@ class TransfermarktBase:
             HTTPException: If there are too many redirects, or if the server returns a client or
                 server error status code.
         """
+        self.ensure_session()  # Ensure the session is created if not already
+
         url = self.URL if not url else url
         try:
-            response: Response = requests.get(
-                url=url,
-                headers={
-                    "User-Agent": (
-                        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                        "AppleWebKit/537.36 (KHTML, like Gecko) "
-                        "Chrome/113.0.0.0 "
-                        "Safari/537.36"
-                    ),
-                },
+            response: Response = self._session.get(
+                url=url
             )
         except TooManyRedirects:
             raise HTTPException(status_code=404, detail=f"Not found for url: {url}")

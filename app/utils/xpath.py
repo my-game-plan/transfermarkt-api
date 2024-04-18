@@ -159,6 +159,22 @@ class Clubs:
             JOINED_ON = "//div[@id='yw1']//td[8]//text()"
             CONTRACTS = "//div[@id='yw1']//td[10]//text()"
 
+    class Transfers:
+        # PAST_FLAG = "//div[@id='yw1']//thead//text()"
+        CLUB_NAME = "//header//h1//text()"
+        # CLUB_URL = "//li[@id='overview']//@href"
+        # PAGE_NATIONALITIES = "//td[img[@class='flaggenrahmen']]"
+        # PAGE_INFOS = "//td[@class='posrela']"
+        NAMES = "//td[@class='posrela']//a//text()"
+        URLS = "//td[@class='hauptlink']//@href"
+        # POSITIONS = "//td[@class='posrela']//tr[2]//text()"
+        # DOB_AGE = "//div[@id='yw1']//td[3]//text()"
+        # NATIONALITIES = ".//img//@title"
+        # JOINED = ".//span/node()/@title"
+        # SIGNED_FROM = ".//a//img//@title"
+        # STATUSES = ".//td[@class='hauptlink']//span//@title"
+        FEE = ".//td[@class='hauptlink']//span//@title"
+
 
 class Competitions:
     class Profile:

@@ -160,20 +160,13 @@ class Clubs:
             CONTRACTS = "//div[@id='yw1']//td[10]//text()"
 
     class Transfers:
-        # PAST_FLAG = "//div[@id='yw1']//thead//text()"
-        CLUB_NAME = "//header//h1//text()"
-        # CLUB_URL = "//li[@id='overview']//@href"
-        # PAGE_NATIONALITIES = "//td[img[@class='flaggenrahmen']]"
-        # PAGE_INFOS = "//td[@class='posrela']"
-        NAMES = "//td[@class='posrela']//a//text()"
-        URLS = "//td[@class='hauptlink']//@href"
-        # POSITIONS = "//td[@class='posrela']//tr[2]//text()"
-        # DOB_AGE = "//div[@id='yw1']//td[3]//text()"
-        # NATIONALITIES = ".//img//@title"
-        # JOINED = ".//span/node()/@title"
-        # SIGNED_FROM = ".//a//img//@title"
-        # STATUSES = ".//td[@class='hauptlink']//span//@title"
-        FEE = ".//td[@class='hauptlink']//span//@title"
+        IDS = "//td[@class='hauptlink']/a[contains(@href, '/profil/spieler')]/@href"
+        NAMES = "//td[@class='hauptlink']/a[contains(@href, '/profil/spieler')]/@title"
+        AGES = "//td[@class='zentriert'][1]/text()"
+        # MARKET_VALUES = "//td[@class='rechts'][1]/text()"     # Returns to many things
+        LEFTS_CLUB = "//td[@class='hauptlink']/a[contains(@href, '/startseite/verein')]/@title"
+        LEFTS_RETIRED = "//td[@class='hauptlink' and not(a)]/text()"
+        FEES = "//td[contains(@class, 'rechts') and contains(@class, 'hauptlink')]/a/text()"
 
 
 class Competitions:

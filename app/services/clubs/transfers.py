@@ -1,3 +1,4 @@
+import re
 from dataclasses import dataclass
 from datetime import datetime
 
@@ -26,7 +27,7 @@ class TransfermarktClubTransfers(TransfermarktBase):
         """Initialize the TransfermarktClubTransfers class."""
         self.URL = self.URL.format(club_id=self.club_id, season_id=self.season_id)
         self.page = self.request_url_page()
-        self.raise_exception_if_not_found(xpath=Clubs.Transfers.CLUB_NAME)
+        self.raise_exception_if_not_found(xpath=Clubs.Players.CLUB_NAME)
         self.__update_season_id()
 
     def __update_season_id(self):
@@ -34,45 +35,39 @@ class TransfermarktClubTransfers(TransfermarktBase):
         if self.season_id is None:
             self.season_id = extract_from_url(self.get_text_by_xpath(Clubs.Players.CLUB_URL), "season_id")
 
-    def __parse_club_transfers(self) -> list[dict]:
+    def __parse_club_transfers(self, xpath_prefix: str) -> list[dict]:
         """
         Parse transfer information from the webpage and return a list of dictionaries, each representing a transfer.
 
         Returns:
             list[dict]: A list of transfer information dictionaries.
         """
-        # page_nationalities = self.page.xpath(Clubs.Players.PAGE_NATIONALITIES)
-        # page_players_infos = self.page.xpath(Clubs.Players.PAGE_INFOS)
-        # page_players_signed_from = self.page.xpath(
-        #     Clubs.Players.Past.PAGE_SIGNED_FROM if self.past else Clubs.Players.Present.PAGE_SIGNED_FROM,
-        # )
-        players_ids = [extract_from_url(url) for url in self.get_list_by_xpath(Clubs.Players.URLS)]
-        players_names = self.get_list_by_xpath(Clubs.Players.NAMES)
-        # players_positions = self.get_list_by_xpath(Clubs.Players.POSITIONS)
-        # players_dobs = [
-        #     safe_regex(dob_age, REGEX_DOB, "dob") for dob_age in self.get_list_by_xpath(Clubs.Players.DOB_AGE)
-        # ]
-        # players_ages = [
-        #     safe_regex(dob_age, REGEX_DOB, "age") for dob_age in self.get_list_by_xpath(Clubs.Players.DOB_AGE)
-        # ]
-        # players_nationalities = [nationality.xpath(Clubs.Players.NATIONALITIES) for nationality in page_nationalities]
-        # players_signed_from = ["; ".join(e.xpath(Clubs.Players.SIGNED_FROM)) for e in page_players_signed_from]
+        players_ids = [self._extract_id_from_href(href) for href in self.get_list_by_xpath(xpath_prefix + Clubs.Transfers.IDS)]
+        players_names = self.get_list_by_xpath(xpath_prefix + Clubs.Transfers.NAMES)
+        ages = self.get_list_by_xpath(xpath_prefix + Clubs.Transfers.AGES)
+        # market_values = self.get_list_by_xpath(Clubs.Transfers.MARKET_VALUES)
+        lefts_xpath = xpath_prefix + Clubs.Transfers.LEFTS_CLUB + " | " + xpath_prefix + Clubs.Transfers.LEFTS_RETIRED
+        lefts = self.get_list_by_xpath(lefts_xpath)
+        fees = self.get_list_by_xpath(xpath_prefix + Clubs.Transfers.FEES)
+
+        assert len(players_ids) == len(players_names) == len(ages) == len(lefts) == len(fees)
 
         return [
             {
                 "id": idx,
                 "name": name,
-                # "position": position,
-                # "dateOfBirth": dob,
-                # "age": age,
+                "age": age,
+                # "marketValue": market_value,
+                "left": left,
+                "fee": fee,
             }
-            for idx, name, in zip(  # noqa: E501
+            for idx, name, age, left, fee in zip(  # noqa: E501
                 players_ids,
                 players_names,
-                # players_positions,
-                # players_dobs,
-                # players_ages,
-                # players_nationalities,
+                ages,
+                # market_values,
+                lefts,
+                fees,
             )
         ]
 
@@ -85,7 +80,21 @@ class TransfermarktClubTransfers(TransfermarktBase):
                   the data was last updated.
         """
         self.response["id"] = self.club_id
-        self.response["transfers"] = self.__parse_club_transfers()
+        self.response["arrivals"] = self.__parse_club_transfers("//div[h2[contains(text(), 'Arrivals')]]")
+        self.response["departures"] = self.__parse_club_transfers("//div[h2[contains(text(), 'Departures')]]")
         self.response["updatedAt"] = datetime.now()
 
         return clean_response(self.response)
+
+    @staticmethod
+    def _extract_id_from_href(href: str) -> str:
+        """
+        Extract the player ID from the href attribute of an anchor tag.
+
+        Args:
+            href (str): The href attribute of an anchor tag.
+
+        Returns:
+            str: The extracted player ID.
+        """
+        return re.search(r'/profil/spieler/(\d+)', href).group(1)

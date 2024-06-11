@@ -31,10 +31,23 @@ def test_get_club_transfers(
     expected_schema = Schema(
         {
             "id": And(str, len_greater_than_0),
-            "transfers": [
+            "arrivals": [
                 {
                     "id": And(str, len_greater_than_0),
                     "name": And(str, len_greater_than_0),
+                    "age": And(str, len_greater_than_0, regex_integer),
+                    # "marketValue": And(str, len_greater_than_0, regex_market_value),
+                    "left": And(str, len_greater_than_0, regex_date_mmm_dd_yyyy),
+                    "fee": Or(None, And(str, regex_market_value)),
+                },
+            ],
+            "departures": [
+                {
+                    "id": And(str, len_greater_than_0),
+                    "name": And(str, len_greater_than_0),
+                    "age": And(str, len_greater_than_0, regex_integer),
+                    # "marketValue": And(str, len_greater_than_0, regex_market_value),
+                    "left": And(str, len_greater_than_0, regex_date_mmm_dd_yyyy),
                     "fee": Or(None, And(str, regex_market_value)),
                 },
             ],

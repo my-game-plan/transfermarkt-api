@@ -59,7 +59,7 @@ def parse_market_value(raw_player_market_value: dict, player_id: str):
     return market_values
 
 
-competition_id = "BE1"
+competition_id = "PO1"
 season_id = "2023"
 start_date = datetime.strptime("2023-10-01", "%Y-%m-%d")
 end_date = datetime.strptime("2024-05-31", "%Y-%m-%d")
@@ -68,8 +68,6 @@ players_value_info = []
 if __name__ == "__main__":
     competition_clubs = TransfermarktCompetitionClubs(competition_id=competition_id, season_id=season_id).get_competition_clubs()
     for club in competition_clubs["clubs"]:
-        # if club["id"] == '58':
-        #     break
         club_players = TransfermarktClubPlayers(club_id=club["id"]).get_club_players()
         for player in club_players["players"]:
             start_club_id, end_club_id, start_value, end_value = None, None, None, None

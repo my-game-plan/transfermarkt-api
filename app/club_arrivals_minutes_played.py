@@ -39,15 +39,15 @@ def parse_minutes(raw_minutes: str):
     return int(raw_minutes.replace("'", "").replace(".", ""))
 
 
-competition_id = "BE1"
-competition_matches_per_season = 27
+competition_id = "PL1"
+competition_matches_per_season = 34
 season_id = "2023"
 competition_arrivals = []
 
 if __name__ == "__main__":
     competition_clubs = TransfermarktCompetitionClubs(competition_id=competition_id, season_id=season_id).get_competition_clubs()
     for club in competition_clubs["clubs"]:
-        club_transfers = TransfermarktClubTransfers(club_id=club["id"]).get_club_transfers()
+        club_transfers = TransfermarktClubTransfers(club_id=club["id"], season_id=season_id).get_club_transfers()
         for arrival in club_transfers["arrivals"]:
             _player_stats = TransfermarktPlayerStats(player_id=arrival["id"]).get_player_stats()
             player_stats = _player_stats.get("stats")
@@ -67,14 +67,15 @@ if __name__ == "__main__":
                         continue
                     elif raw_fee in ["?", "-", "free transfer", "loan transfer", "Loan fee:", "draft"]:
                         parsed_fee = 0
-                    elif "Loan fee:" in raw_fee:
+                    elif "Loan fee: " in raw_fee:
                         parsed_fee = parse_currency_value(raw_fee.replace("Loan fee: ", ""), arrival["id"])
                     else:
                         parsed_fee = parse_currency_value(raw_fee, arrival["id"])
                     pct_minutes_played = round(minutes_played / (competition_matches_per_season * 90), 2)
-                    arrival_info = {"club_name": club["name"], "player_name": arrival["name"], "player_age": int(arrival["age"]),
+                    age = int(arrival.get("age", 26))
+                    arrival_info = {"club_name": club["name"], "player_name": arrival["name"], "player_age": age,
                                     "left": arrival["left"], "fee": parsed_fee,
-                                    "minutes_played": minutes_played, "pct_minutes_played": pct_minutes_played, "euro_minutes_played": pct_minutes_played * parsed_fee}
+                                    "minutes_played": minutes_played, "pct_minutes_played": pct_minutes_played, "euro_minutes_played": pct_minutes_played * parsed_fee, "raw_fee": raw_fee}
                     competition_arrivals.append(arrival_info)
                 else:
                     print(f"Player {arrival['name']} has no stats for competition {competition_id}")

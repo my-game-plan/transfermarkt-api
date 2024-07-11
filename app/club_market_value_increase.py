@@ -39,7 +39,7 @@ def parse_market_value(raw_player_market_value: dict, player_id: str):
     # Check if the market value is present in the input dictionary
     if "marketValueHistory" not in raw_player_market_value:
         print(f"Player ID: {player_id} - No marketValueHistory object: {raw_player_market_value}")
-        return None
+        return []
 
     market_values = []
     for market_value in raw_player_market_value["marketValueHistory"]:
@@ -59,10 +59,12 @@ def parse_market_value(raw_player_market_value: dict, player_id: str):
     return market_values
 
 
-competition_id = "PO1"
-season_id = "2023"
-start_date = datetime.strptime("2023-10-01", "%Y-%m-%d")
-end_date = datetime.strptime("2024-05-31", "%Y-%m-%d")
+competition_id = "BRA2"
+season_id = "2022"
+# start_date = datetime.strptime("2023-10-01", "%Y-%m-%d")
+# end_date = datetime.strptime("2024-05-31", "%Y-%m-%d")
+start_date = datetime.strptime("2023-04-01", "%Y-%m-%d")
+end_date = datetime.strptime("2023-12-01", "%Y-%m-%d")
 players_value_info = []
 
 if __name__ == "__main__":

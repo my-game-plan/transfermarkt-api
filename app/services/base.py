@@ -40,7 +40,7 @@ class TransfermarktBase:
     @classmethod
     def _create_session(cls) -> Session:
         status_forcelist = [500, 502, 503, 504]
-        retries = Retry(total=5, backoff_factor=1, status_forcelist=status_forcelist)
+        retries = Retry(total=10, backoff_factor=0.25, status_forcelist=status_forcelist)
         session = Session()
         session.mount('https://', HTTPAdapter(max_retries=retries))
         session.headers.update({

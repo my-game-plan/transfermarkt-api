@@ -5,6 +5,8 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env")
     RATE_LIMITING_ENABLE: bool = False
     RATE_LIMITING_FREQUENCY: str = "2/3seconds"
+    PROXY_USERNAME: str = ""
+    PROXY_PASSWORD: str = ""
 
 
 settings = Settings()

@@ -182,8 +182,6 @@ class TransfermarktBase:
                 "http": proxy_url,
                 "https": proxy_url,
             }
-            print("Using proxy:", proxy_url)
-            print("IP address used: ", self._session.get(url="http://httpbin.org/ip", proxies=proxies).json()["origin"])
             response: Response = self._session.get(
                 url=url,
                 proxies=proxies,

@@ -9,6 +9,23 @@ class Players:
         GAMES_MISSED = ".//td[6]//span//text()"
         GAMES_MISSED_CLUBS_URLS = ".//td[6]//a//@href"
 
+    class Absences:
+        # Suspensions & absences page (/ausfaelle/): red/yellow-card bans, other
+        # suspensions, and non-disciplinary absences (e.g. national-team call-ups).
+        # Same table container as injuries but with an extra "Competition" column.
+        # The competition cell exposes no link, so the competition id is taken from
+        # the logo filename (e.g. .../tiny/es1.png -> ES1).
+        RESULTS = "//div[@id='yw1']//tbody//tr"
+        SEASONS = ".//td[1]//text()"
+        REASON = ".//td[2]//text()"
+        COMPETITION = ".//td[3]//img//@title"
+        COMPETITION_LOGO = ".//td[3]//img//@src"
+        FROM = ".//td[4]//text()"
+        UNTIL = ".//td[5]//text()"
+        DAYS = ".//td[6]//text()"
+        GAMES_MISSED = ".//td[7]/text()"
+        GAMES_MISSED_CLUBS_URLS = ".//td[7]//a//@href"
+
     class JerseyNumbers:
         HEADERS = "//table[@class='items']//thead//tr//@title"
         SEASONS = "//table[@class='items']//td[@class='zentriert']//text()"

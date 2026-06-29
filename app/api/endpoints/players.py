@@ -9,6 +9,7 @@ from app.services.players.jersey_numbers import TransfermarktPlayerJerseyNumbers
 from app.services.players.market_value import TransfermarktPlayerMarketValue
 from app.services.players.profile import TransfermarktPlayerProfile
 from app.services.players.search import TransfermarktPlayerSearch
+from app.services.players.absences import TransfermarktPlayerAbsences
 from app.services.players.stats import TransfermarktPlayerStats
 from app.services.players.transfers import TransfermarktPlayerTransfers
 
@@ -62,6 +63,13 @@ def get_player_injuries(player_id: str, page_number: Optional[int] = 1):
     tfmkt = TransfermarktPlayerInjuries(player_id=player_id, page_number=page_number)
     players_injuries = tfmkt.get_player_injuries()
     return players_injuries
+
+
+@router.get("/{player_id}/absences", response_model=schemas.PlayerAbsences, response_model_exclude_none=True)
+def get_player_absences(player_id: str, page_number: Optional[int] = 1):
+    tfmkt = TransfermarktPlayerAbsences(player_id=player_id, page_number=page_number)
+    players_absences = tfmkt.get_player_absences()
+    return players_absences
 
 
 @router.get("/{player_id}/achievements", response_model=schemas.PlayerAchievements, response_model_exclude_none=True)

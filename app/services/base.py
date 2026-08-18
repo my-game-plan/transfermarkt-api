@@ -1,5 +1,8 @@
+import os
+import random
+import threading
 from dataclasses import dataclass, field
-from typing import Optional
+from typing import List, Optional, Set
 from xml.etree import ElementTree
 
 import requests
@@ -8,8 +11,76 @@ from fastapi import HTTPException
 from lxml import etree
 from requests import Response, TooManyRedirects
 
+from app.settings import settings
 from app.utils.utils import trim
 from app.utils.xpath import Pagination
+
+USER_AGENT = (
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+    "AppleWebKit/537.36 (KHTML, like Gecko) "
+    "Chrome/113.0.0.0 "
+    "Safari/537.36"
+)
+
+# Transfermarkt sits behind CloudFront, which issues a verdict per source IP:
+# a clean IP reaches the origin (200 from nginx), a flagged one gets 202 with an
+# empty body, and a hard-banned one gets 403. The verdict is stable per IP and
+# does not respond to pacing or backoff, so the only workable strategy is to
+# send each request from an IP that is currently clean.
+#
+# The pool is supplied by the caller via PROXY_POOL ("ip:port,ip:port,...")
+# rather than hardcoded here, for two reasons: the provider rotates roughly a
+# third of its IPs a year, and only the caller knows which of its proxies are
+# sticky IPs reserved for per-customer provider credentials and so must never be
+# spent on scraping. With PROXY_POOL unset every request goes out directly,
+# which keeps local development working unchanged.
+MAX_PROXY_ATTEMPTS = 6
+
+# A 404 is a real answer about a real player rather than evidence of a blocked
+# IP, so it is raised to the caller immediately instead of being retried across
+# the whole pool.
+BLOCKED_STATUSES = frozenset({202, 403, 429})
+
+_proxy_lock = threading.Lock()
+_demoted_proxies: Set[str] = set()
+
+
+def _proxy_setting(name: str) -> str:
+    """Read a proxy setting, preferring the live environment over `settings`.
+
+    `settings` is instantiated at import time. The caller builds the pool at
+    runtime (it has to query its proxy provider first), which can happen after
+    this module was imported, so the frozen value would be stale or empty.
+    """
+    return os.environ.get(name) or getattr(settings, name, "") or ""
+
+
+def proxy_pool() -> List[str]:
+    return [p.strip() for p in _proxy_setting("PROXY_POOL").split(",") if p.strip()]
+
+
+def _pick_proxy(pool: List[str]) -> str:
+    """Choose a proxy that has not yet been seen to fail."""
+    with _proxy_lock:
+        usable = [p for p in pool if p not in _demoted_proxies]
+        if not usable:
+            # Every proxy has failed at least once. Verdicts drift and these
+            # demotions may be stale, so forget them rather than give up.
+            _demoted_proxies.clear()
+            usable = list(pool)
+    return random.choice(usable)
+
+
+def _demote_proxy(proxy: str) -> None:
+    with _proxy_lock:
+        _demoted_proxies.add(proxy)
+
+
+def _proxies_for(proxy: str) -> dict:
+    user = _proxy_setting("PROXY_USERNAME")
+    password = _proxy_setting("PROXY_PASSWORD")
+    url = f"http://{user}:{password}@{proxy}"
+    return {"http": url, "https": url}
 
 
 @dataclass
@@ -44,17 +115,46 @@ class TransfermarktBase:
                 server error status code.
         """
         url = self.URL if not url else url
-        try:
-            response: Response = requests.get(
-                url=url,
-                headers={
-                    "User-Agent": (
-                        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                        "AppleWebKit/537.36 (KHTML, like Gecko) "
-                        "Chrome/113.0.0.0 "
-                        "Safari/537.36"
+        pool = proxy_pool()
+        if not pool:
+            return self._raise_for_status(self._get(url), url)
+
+        # Rotate over the pool: a blocked IP is a property of the IP, so the same
+        # request from a different one usually succeeds.
+        last_error: Optional[HTTPException] = None
+        for _ in range(min(MAX_PROXY_ATTEMPTS, len(pool))):
+            proxy = _pick_proxy(pool)
+            try:
+                response = self._get(url, proxies=_proxies_for(proxy))
+            except HTTPException as e:
+                # Could not reach Transfermarkt through this proxy at all
+                # (dead proxy, timeout). Try the next one.
+                _demote_proxy(proxy)
+                last_error = e
+                continue
+            if response.status_code in BLOCKED_STATUSES:
+                _demote_proxy(proxy)
+                last_error = HTTPException(
+                    status_code=response.status_code,
+                    detail=(
+                        f"Blocked by Transfermarkt ({response.status_code}) for url: {url}"
                     ),
-                },
+                )
+                continue
+            return self._raise_for_status(response, url)
+
+        raise last_error or HTTPException(
+            status_code=502, detail=f"No usable proxy for url: {url}"
+        )
+
+    @staticmethod
+    def _get(url: str, proxies: Optional[dict] = None) -> Response:
+        try:
+            return requests.get(
+                url=url,
+                headers={"User-Agent": USER_AGENT},
+                proxies=proxies,
+                timeout=30,
             )
         except TooManyRedirects:
             raise HTTPException(status_code=404, detail=f"Not found for url: {url}")
@@ -62,6 +162,9 @@ class TransfermarktBase:
             raise HTTPException(status_code=500, detail=f"Connection error for url: {url}")
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Error for url: {url}. {e}")
+
+    @staticmethod
+    def _raise_for_status(response: Response, url: str) -> Response:
         if 400 <= response.status_code < 500:
             raise HTTPException(
                 status_code=response.status_code,

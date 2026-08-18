@@ -39,7 +39,10 @@ MAX_PROXY_ATTEMPTS = 6
 # A 404 is a real answer about a real player rather than evidence of a blocked
 # IP, so it is raised to the caller immediately instead of being retried across
 # the whole pool.
-BLOCKED_STATUSES = frozenset({202, 403, 429})
+#
+# 405 looks like a route problem but is not: the same URL returns 200 through
+# most proxies and 405 through a few, so it is IP-dependent and belongs here.
+BLOCKED_STATUSES = frozenset({202, 403, 405, 429})
 
 _proxy_lock = threading.Lock()
 _demoted_proxies: Set[str] = set()

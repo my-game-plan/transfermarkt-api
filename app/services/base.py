@@ -34,7 +34,21 @@ USER_AGENT = (
 # sticky IPs reserved for per-customer provider credentials and so must never be
 # spent on scraping. With PROXY_POOL unset every request goes out directly,
 # which keeps local development working unchanged.
-MAX_PROXY_ATTEMPTS = 6
+#
+# The budget is 30 rather than a handful because the verdict is not only per IP
+# but also per endpoint, and the two endpoints we scrape sit far apart. A player
+# profile comes back on the first or second proxy, so 6 was always plenty for the
+# market-value scrape. `schnellsuche`, the player search, is protected much
+# harder: measured 2026-09-21 over the same 95-proxy pool, 6 attempts returned
+# 60% of searches and 30 returned 96% - the difference between a player-matching
+# run that matches people and one that matched a single player in 13,337 tries.
+#
+# It is one number rather than a per-endpoint setting because a larger budget
+# costs nothing where it is not needed: a request that succeeds still succeeds
+# on its first or second proxy, so the extra attempts are only ever spent on one
+# that would otherwise have failed outright. Same measurement, 25 searches end
+# to end: 57s at 6, 55s at 30.
+MAX_PROXY_ATTEMPTS = 30
 
 # A 404 is a real answer about a real player rather than evidence of a blocked
 # IP, so it is raised to the caller immediately instead of being retried across

@@ -194,6 +194,52 @@ class Clubs:
             FOOTS = "//div[@id='yw1']//td[7]//text()"
 
 
+class Staff:
+    class Club:
+        # The club staff page (/mitarbeiter/): one box per section (Coaching Staff,
+        # Management, Board of Directors, Scouting, Youth, Medical department, Public
+        # Relations, Other), every box the same six-column table.
+        BOXES = "//div[@class='box'][h2[@class='content-box-headline']][.//a[contains(@href, '/profil/trainer/')]]"
+        SECTION = "./h2[@class='content-box-headline']//text()"
+        ROWS = "./div[@class='responsive-table']/table/tbody/tr"
+        URL = ".//td[@class='hauptlink']/a/@href"
+        NAME = ".//td[@class='hauptlink']/a/@title"
+        ROLE = ".//table[@class='inline-table']//tr[2]/td//text()"
+        AGE = "./td[2]//text()"
+        CITIZENSHIP = "./td[3]//img/@title"
+        APPOINTED = "./td[4]//text()"
+        CONTRACT_EXPIRES = "./td[5]//text()"
+        LAST_CLUB_URL = "./td[6]//a/@href"
+        LAST_CLUB_NAME = "./td[6]//a/@title"
+
+    class Profile:
+        # The header every trainer page carries, the history page included.
+        ID = "//tm-subnavigation[@controller='trainer']/@id"
+        HEADLINE = "//h1[@class='data-header__headline-wrapper']"
+        DOB_AGE = "//span[@itemprop='birthDate']//text()"
+        PLACE_OF_BIRTH = "//span[@itemprop='birthPlace']//text()"
+        CITIZENSHIP = "//span[@itemprop='nationality']//img/@title"
+        COACHING_LICENCE = "//li[contains(., 'Coaching Licence')]/span//text()"
+        PLAYER_URL = "//a[contains(@class, 'data-header__box--link')][contains(@href, '/profil/spieler/')]/@href"
+        CURRENT_CLUB_URL = "//span[@class='data-header__club']/a/@href"
+        CURRENT_CLUB_NAME = "//span[@class='data-header__club']/a/@title"
+        CURRENT_ROLE = "//span[@class='data-header__label']/b//text()"
+
+    class History:
+        # The career page (/stationen/): a main row per appointment, optionally
+        # followed by an "extrarow" naming the managers an assistant worked under.
+        ROWS = "//table[@class='items']/tbody/tr"
+        IS_EXTRA = "./td[contains(@class, 'extrarow')]"
+        CLUB_URL = "./td[2]/a/@href"
+        CLUB_NAME = "./td[2]/a/@title"
+        ROLE = "./td[2]/text()"
+        APPOINTED = "./td[3]//text()"
+        UNTIL = "./td[4]//text()"
+        MATCHES = "./td[5]//text()"
+        PPM = "./td[6]//text()"
+        ASSISTANT_OF = "./td//a[contains(@href, '/profil/trainer/')]"
+
+
 class Competitions:
     class Profile:
         URL = "//a[@class='tm-tab']//@href"

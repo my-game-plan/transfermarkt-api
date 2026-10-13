@@ -1,4 +1,5 @@
 import re
+from datetime import datetime
 from typing import Optional, Union
 
 
@@ -138,3 +139,34 @@ def to_camel_case(headers: list) -> list:
     camel_case_headers = [header[0].lower() + header[1:] for header in camel_case_headers]
 
     return [header for header in camel_case_headers]
+
+
+# Transfermarkt writes one date three ways on the staff pages: "08/12/2025" on the
+# staff list, "30.06.2028" for a contract end, and "26/27 (01/07/2026)" on a career
+# row. All three are day-first. dateutil's default is month-first, so "01/07/2026"
+# would silently become 7 January; these pages are parsed explicitly instead.
+_DAY_FIRST_FORMATS = ("%d/%m/%Y", "%d.%m.%Y", "%b %d, %Y")
+_DATE_IN_TEXT = re.compile(r"(\d{1,2}[/.]\d{1,2}[/.]\d{4}|[A-Z][a-z]{2} \d{1,2}, \d{4})")
+
+
+def parse_day_first_date(text: Optional[Union[str, list]]) -> Optional[str]:
+    """
+    Find a day-first Transfermarkt date in a text and return it as an ISO date string.
+
+    Args:
+        text (Optional[Union[str, list]]): The text containing the date, e.g. "26/27 (01/07/2026)".
+
+    Returns:
+        Optional[str]: The date as "YYYY-MM-DD", or None if the text holds no parseable date.
+    """
+    if not text:
+        return None
+    match = _DATE_IN_TEXT.search(trim(text))
+    if not match:
+        return None
+    for date_format in _DAY_FIRST_FORMATS:
+        try:
+            return datetime.strptime(match.group(1), date_format).date().isoformat()
+        except ValueError:
+            continue
+    return None

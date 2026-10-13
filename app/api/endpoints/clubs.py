@@ -6,6 +6,7 @@ from app.schemas import clubs as schemas
 from app.services.clubs.players import TransfermarktClubPlayers
 from app.services.clubs.profile import TransfermarktClubProfile
 from app.services.clubs.search import TransfermarktClubSearch
+from app.services.clubs.staff import TransfermarktClubStaff
 
 router = APIRouter()
 
@@ -29,3 +30,10 @@ def get_club_players(club_id: str, season_id: Optional[str] = None) -> dict:
     tfmkt = TransfermarktClubPlayers(club_id=club_id, season_id=season_id)
     club_players = tfmkt.get_club_players()
     return club_players
+
+
+@router.get("/{club_id}/staff", response_model=schemas.ClubStaff, response_model_exclude_defaults=True)
+def get_club_staff(club_id: str) -> dict:
+    tfmkt = TransfermarktClubStaff(club_id=club_id)
+    club_staff = tfmkt.get_club_staff()
+    return club_staff

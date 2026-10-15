@@ -12,7 +12,8 @@ def test_get_staff_profile_not_found():
         TransfermarktStaffProfile(staff_id="0")
 
 
-@pytest.mark.parametrize("staff_id", ["3", "47535", "131333"])
+# 7537 (Ronny Deila) is without a club: his header links to no club page.
+@pytest.mark.parametrize("staff_id", ["3", "47535", "131333", "7537"])
 def test_get_staff_profile(staff_id, len_greater_than_0):
     tfmkt = TransfermarktStaffProfile(staff_id=staff_id)
     result = tfmkt.get_staff_profile()

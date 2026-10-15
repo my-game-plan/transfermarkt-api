@@ -239,6 +239,20 @@ class Staff:
         PPM = "./td[6]//text()"
         ASSISTANT_OF = "./td//a[contains(@href, '/profil/trainer/')]"
 
+    class ClubHistory:
+        # The club's coach history page (/mitarbeiterhistorie/): one table of every head
+        # coach the club has had, Manager and Caretaker Manager appointments together,
+        # newest first, on a single unpaginated page. The page names no role per row.
+        ROWS = "//table[@class='items']/tbody/tr"
+        URL = ".//td[@class='hauptlink']/a/@href"
+        NAME = ".//td[@class='hauptlink']/a/@title"
+        DATE_OF_BIRTH = "./td[1]//table[@class='inline-table']//tr[2]/td//text()"
+        CITIZENSHIP = "./td[2]//img/@title"
+        APPOINTED = "./td[3]//text()"
+        UNTIL = "./td[4]//text()"
+        MATCHES = "./td[6]//text()"
+        PPM = "./td[7]//text()"
+
 
 class Competitions:
     class Profile:

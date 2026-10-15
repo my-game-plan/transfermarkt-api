@@ -3,6 +3,7 @@ from typing import Optional
 from fastapi import APIRouter
 
 from app.schemas import clubs as schemas
+from app.services.clubs.coach_history import TransfermarktClubCoachHistory
 from app.services.clubs.players import TransfermarktClubPlayers
 from app.services.clubs.profile import TransfermarktClubProfile
 from app.services.clubs.search import TransfermarktClubSearch
@@ -37,3 +38,14 @@ def get_club_staff(club_id: str) -> dict:
     tfmkt = TransfermarktClubStaff(club_id=club_id)
     club_staff = tfmkt.get_club_staff()
     return club_staff
+
+
+@router.get(
+    "/{club_id}/coach-history",
+    response_model=schemas.ClubCoachHistory,
+    response_model_exclude_defaults=True,
+)
+def get_club_coach_history(club_id: str) -> dict:
+    tfmkt = TransfermarktClubCoachHistory(club_id=club_id)
+    club_coach_history = tfmkt.get_club_coach_history()
+    return club_coach_history

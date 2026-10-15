@@ -40,11 +40,12 @@ def extract_from_url(tfmkt_url: Optional[str], element: str = "id") -> Optional[
         r"(/transfer_id/(?P<transfer_id>\d+))?"
     )
 
-    try:
-        groups: dict = re.match(regex, trim(tfmkt_url)).groupdict()
-    except TypeError:
+    match = re.match(regex, trim(tfmkt_url))
+    if match is None:
+        # Not every header link is an entity: an unemployed coach's club link is
+        # /trainer/verfuegbaretrainer/statistik ("Without Club").
         return None
-    return groups.get(element)
+    return match.groupdict().get(element)
 
 
 def trim(text: Union[list, str]) -> str:

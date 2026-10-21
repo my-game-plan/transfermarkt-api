@@ -36,6 +36,7 @@ class Players:
         ID = "//tm-subnavigation[@controller='spieler']//@id"
         URL = "//link[@rel='canonical']//@href"
         NAME = "//h1[@class='data-header__headline-wrapper']/descendant-or-self::*[not(self::span)]/text()"
+        LAST_NAME = "//h1[@class='data-header__headline-wrapper']/strong/text()"
         DESCRIPTION = "//meta[@name='description']//@content"
         IMAGE_URL = "//div[@id='fotoauswahlOeffnen']//img//@src"
         SHIRT_NUMBER = "//span[@class='data-header__shirt-number']//text()"

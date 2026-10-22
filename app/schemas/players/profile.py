@@ -56,6 +56,7 @@ class PlayerProfile(TransfermarktBaseModel, AuditMixin):
     id: str
     url: HttpUrl
     name: str
+    last_name: Optional[str]
     description: str
     full_name: Optional[str]
     name_in_home_country: Optional[str]

@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from app.services.base import TransfermarktBase
-from app.utils.regex import REGEX_DOB_AGE
+from app.utils.regex import REGEX_DOB
 from app.utils.utils import extract_from_url, safe_regex, trim
 from app.utils.xpath import Players
 
@@ -62,13 +62,15 @@ class TransfermarktPlayerProfile(TransfermarktBase):
         self.response["id"] = self.get_text_by_xpath(Players.Profile.ID)
         self.response["url"] = self.get_text_by_xpath(Players.Profile.URL)
         self.response["name"] = self.get_text_by_xpath(Players.Profile.NAME, join_str=" ")
+        # TM's headline is "Marlon <strong>Morgenstern</strong>": the bold part is the surname.
+        self.response["lastName"] = self.get_text_by_xpath(Players.Profile.LAST_NAME)
         self.response["description"] = self.get_text_by_xpath(Players.Profile.DESCRIPTION)
         self.response["fullName"] = self.get_text_by_xpath(Players.Profile.FULL_NAME)
         self.response["nameInHomeCountry"] = self.get_text_by_xpath(Players.Profile.NAME_IN_HOME_COUNTRY)
         self.response["imageUrl"] = self.get_text_by_xpath(Players.Profile.IMAGE_URL)
         self.response["dateOfBirth"] = safe_regex(
             self.get_text_by_xpath(Players.Profile.DATE_OF_BIRTH_AGE),
-            REGEX_DOB_AGE,
+            REGEX_DOB,
             "dob",
         )
         self.response["placeOfBirth"] = {
@@ -77,7 +79,7 @@ class TransfermarktPlayerProfile(TransfermarktBase):
         }
         self.response["age"] = safe_regex(
             self.get_text_by_xpath(Players.Profile.DATE_OF_BIRTH_AGE),
-            REGEX_DOB_AGE,
+            REGEX_DOB,
             "age",
         )
         self.response["height"] = self.get_text_by_xpath(Players.Profile.HEIGHT)
